@@ -18,6 +18,19 @@ services:
     depends_on:
       - db 
 
+  nginx:
+    restart: always
+    container_name: nginx_node
+    image: alairc/fullcycle-node-nginx:latest
+    build:
+        context: ./nginx
+    networks:
+      - node-network
+    ports:
+        - "8080:80"
+    depends_on:
+      - app 
+
   db:
     image: mysql:5.7
     command: --innodb-use-native-aio=0
