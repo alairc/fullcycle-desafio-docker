@@ -1,12 +1,28 @@
 version: '3'
 
 services:
+  
+  db:
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: db
+    restart: always
+    tty: true
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=root
+    networks:  
+      - node-network
 
   app:
     build:
-      context: node
+      context: ./node
     container_name: app  
     image: alairc/fullcycle-node:latest
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s docker-entrypoint.sh
+    command: "node index.js"
     networks:
       - node-network
     volumes:
@@ -21,6 +37,7 @@ services:
   nginx:
     restart: always
     container_name: nginx_node
+    tty: true
     image: alairc/fullcycle-node-nginx:latest
     build:
         context: ./nginx
@@ -30,20 +47,6 @@ services:
         - "8080:80"
     depends_on:
       - app 
-
-  db:
-    image: mysql:5.7
-    command: --innodb-use-native-aio=0
-    container_name: db
-    restart: always
-    tty: true
-    volumes:
-      - ./mysql:/var/lib/mysql
-    environment:
-      - MYSQL_DATABASE=nodedb
-      - MYSQL_ROOT_PASSWORD=root
-    networks:  
-      - node-network
 
 networks:
   node-network:
